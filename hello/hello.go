@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/liserjrqlxue/stringutil"
+	"github.com/liserjrqlxue/go_study/stringutil"
 )
 
 func main() {
