@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/liser.jrqlxue/stringutil"
+
+	"github.com/liserjrqlxue/stringutil"
 )
 
 func main() {
