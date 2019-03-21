@@ -40,6 +40,20 @@ func main() {
 	quit <- "Bye!"
 	fmt.Printf("Joe says:%q\n", <-quit)
 
+	const n = 10000
+	leftmost := make(chan int)
+	right := leftmost
+	left := leftmost
+	for i := 0; i < n; i++ {
+		right = make(chan int)
+		go f(left, right)
+		left = right
+	}
+	go func(c chan int) {
+		c <- 1
+	}(right)
+	fmt.Println(<-leftmost)
+
 	c1 := boring1("Joe")
 	timeout := time.After(5 * time.Second)
 	for {
@@ -57,6 +71,10 @@ func main() {
 	ts = append(ts, time.Now())
 	fmt.Printf("total time took %7.3fs\n", ts[1].Sub(ts[0]).Seconds())
 
+}
+
+func f(left, right chan int) {
+	left <- 1 + <-right
 }
 
 func boring2(msg string, quit chan string) <-chan string {
