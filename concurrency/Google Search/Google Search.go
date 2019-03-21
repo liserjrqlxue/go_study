@@ -10,9 +10,20 @@ type Result string
 
 // START1 OMIT
 func Google(query string) (results []Result) {
-	results = append(results, Web(query))
-	results = append(results, Image(query))
-	results = append(results, Video(query))
+	c := make(chan Result)
+	go func() {
+		c <- Web(query)
+	}()
+	go func() {
+		c <- Image(query)
+	}()
+	go func() {
+		c <- Video(query)
+	}()
+	for i := 0; i < 3; i++ {
+		result := <-c
+		results = append(results, result)
+	}
 	return
 }
 
@@ -29,8 +40,9 @@ type Search func(query string) Result // HL
 
 func fakeSearch(kind string) Search {
 	return func(query string) Result {
-		time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
-		return Result(fmt.Sprintf("%s result for %q\n", kind, query))
+		t := rand.Intn(100)
+		time.Sleep(time.Duration(t) * time.Millisecond)
+		return Result(fmt.Sprintf("%s result for %q\t%d millisecond\n", kind, query, t))
 	}
 }
 
