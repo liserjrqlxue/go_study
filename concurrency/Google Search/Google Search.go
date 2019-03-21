@@ -58,8 +58,24 @@ func fakeSearch(kind string) Search {
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	start := time.Now()
-	results := Google("golang")
+	//results := Google("golang")
+	results := First(
+		"golang",
+		fakeSearch("replica 1"),
+		fakeSearch("replica 2"),
+	)
 	elapsed := time.Since(start)
 	fmt.Println(results)
 	fmt.Println(elapsed)
+}
+
+func First(query string, replicas ...Search) Result {
+	c := make(chan Result)
+	searchReplica := func(i int) {
+		c <- replicas[i](query)
+	}
+	for i := range replicas {
+		go searchReplica(i)
+	}
+	return <-c
 }
