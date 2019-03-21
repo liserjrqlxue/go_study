@@ -20,9 +20,15 @@ func Google(query string) (results []Result) {
 	go func() {
 		c <- Video(query)
 	}()
+	timeout := time.After(80 * time.Millisecond)
 	for i := 0; i < 3; i++ {
-		result := <-c
-		results = append(results, result)
+		select {
+		case result := <-c:
+			results = append(results, result)
+		case <-timeout:
+			fmt.Println("time out")
+			return
+		}
 	}
 	return
 }
@@ -41,6 +47,7 @@ type Search func(query string) Result // HL
 func fakeSearch(kind string) Search {
 	return func(query string) Result {
 		t := rand.Intn(100)
+		fmt.Printf("use %d millisecond for %s\n", t, kind)
 		time.Sleep(time.Duration(t) * time.Millisecond)
 		return Result(fmt.Sprintf("%s result for %q\t%d millisecond\n", kind, query, t))
 	}
