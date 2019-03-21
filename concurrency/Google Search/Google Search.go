@@ -12,13 +12,13 @@ type Result string
 func Google(query string) (results []Result) {
 	c := make(chan Result)
 	go func() {
-		c <- Web(query)
+		c <- First(query, Web, Web1, Web2)
 	}()
 	go func() {
-		c <- Image(query)
+		c <- First(query, Image, Image1, Image2)
 	}()
 	go func() {
-		c <- Video(query)
+		c <- First(query, Video, Video1, Video2)
 	}()
 	timeout := time.After(80 * time.Millisecond)
 	for i := 0; i < 3; i++ {
@@ -37,9 +37,15 @@ func Google(query string) (results []Result) {
 
 // START2 OMIT
 var (
-	Web   = fakeSearch("web")
-	Image = fakeSearch("image")
-	Video = fakeSearch("video")
+	Web    = fakeSearch("web")
+	Image  = fakeSearch("image")
+	Video  = fakeSearch("video")
+	Web1   = fakeSearch("web1")
+	Image1 = fakeSearch("image1")
+	Video1 = fakeSearch("video1")
+	Web2   = fakeSearch("web2")
+	Image2 = fakeSearch("image2")
+	Video2 = fakeSearch("video2")
 )
 
 type Search func(query string) Result // HL
@@ -58,12 +64,7 @@ func fakeSearch(kind string) Search {
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	start := time.Now()
-	//results := Google("golang")
-	results := First(
-		"golang",
-		fakeSearch("replica 1"),
-		fakeSearch("replica 2"),
-	)
+	results := Google("golang")
 	elapsed := time.Since(start)
 	fmt.Println(results)
 	fmt.Println(elapsed)
