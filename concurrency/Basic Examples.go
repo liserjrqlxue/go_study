@@ -32,13 +32,13 @@ func main() {
 	}
 	fmt.Println("You're boring; I'm leaving.")
 
-	quit := make(chan bool)
+	quit := make(chan string)
 	c2 := boring2("Joe", quit)
 	for i := rand.Intn(10); i >= 0; i-- {
 		fmt.Println(<-c2)
 	}
-	quit <- true
-	fmt.Println("quit\n")
+	quit <- "Bye!"
+	fmt.Printf("Joe says:%q\n", <-quit)
 
 	c1 := boring1("Joe")
 	timeout := time.After(5 * time.Second)
@@ -59,7 +59,7 @@ func main() {
 
 }
 
-func boring2(msg string, quit chan bool) <-chan string {
+func boring2(msg string, quit chan string) <-chan string {
 	c := make(chan string)
 	go func() {
 		for i := 0; ; i++ {
@@ -67,6 +67,7 @@ func boring2(msg string, quit chan bool) <-chan string {
 			case c <- fmt.Sprintf("%s: %d", msg, i):
 				// do nothing
 			case <-quit:
+				quit <- "See you!"
 				return
 			}
 		}
