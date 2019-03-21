@@ -21,7 +21,7 @@ func main() {
 	c := fanIn(joe, ann)
 	fmt.Println("I'm listening.")
 	//time.Sleep(2*time.Second)
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 10; i++ {
 		//fmt.Printf("You say: %q\n", <-c)
 		msg1 := <-c
 		fmt.Println(msg1.str)
@@ -33,12 +33,13 @@ func main() {
 	fmt.Println("You're boring; I'm leaving.")
 
 	t := boring1("Joe")
+	timeout := time.After(5 * time.Second)
 	for {
 		select {
 		case s := <-t:
 			fmt.Println(s)
-		case <-time.After(1 * time.Second):
-			fmt.Println("You're too slow.")
+		case <-timeout:
+			fmt.Println("You talk too much.")
 			return
 		}
 	}
@@ -53,7 +54,7 @@ func boring1(msg string) <-chan string {
 	go func() { // launch goroutine from inside the function
 		sum := 0
 		for i := 0; ; i++ {
-			t := rand.Intn(1.5e3)
+			t := rand.Intn(1e3)
 			sum += t
 			c <- fmt.Sprintf("%s: %d %d", msg, i, t)
 			time.Sleep(time.Duration(t) * time.Millisecond)
