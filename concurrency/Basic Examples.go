@@ -21,7 +21,7 @@ func main() {
 	c := fanIn(joe, ann)
 	fmt.Println("I'm listening.")
 	//time.Sleep(2*time.Second)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		//fmt.Printf("You say: %q\n", <-c)
 		msg1 := <-c
 		fmt.Println(msg1.str)
@@ -32,14 +32,24 @@ func main() {
 	}
 	fmt.Println("You're boring; I'm leaving.")
 
-	t := boring1("Joe")
+	quit := make(chan bool)
+	c2 := boring2("Joe", quit)
+	for i := rand.Intn(10); i >= 0; i-- {
+		fmt.Println(<-c2)
+	}
+	quit <- true
+	fmt.Println("quit\n")
+
+	c1 := boring1("Joe")
 	timeout := time.After(5 * time.Second)
 	for {
 		select {
-		case s := <-t:
+		case s := <-c1:
 			fmt.Println(s)
 		case <-timeout:
 			fmt.Println("You talk too much.")
+			return
+		case <-quit:
 			return
 		}
 	}
@@ -47,6 +57,22 @@ func main() {
 	ts = append(ts, time.Now())
 	fmt.Printf("total time took %7.3fs\n", ts[1].Sub(ts[0]).Seconds())
 
+}
+
+func boring2(msg string, quit chan bool) <-chan string {
+	c := make(chan string)
+	go func() {
+		for i := 0; ; i++ {
+			select {
+			case c <- fmt.Sprintf("%s: %d", msg, i):
+				// do nothing
+			case <-quit:
+				return
+			}
+		}
+
+	}()
+	return c
 }
 
 func boring1(msg string) <-chan string {
