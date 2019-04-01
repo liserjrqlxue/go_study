@@ -21,7 +21,7 @@ func main() {
 	c := fanIn(joe, ann)
 	fmt.Println("I'm listening.")
 	//time.Sleep(2*time.Second)
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 5; i++ {
 		//fmt.Printf("You say: %q\n", <-c)
 		msg1 := <-c
 		fmt.Println(msg1.str)
@@ -31,13 +31,81 @@ func main() {
 		msg2.wait <- true
 	}
 	fmt.Println("You're boring; I'm leaving.")
+
+	quit := make(chan string)
+	c2 := boring2("Joe", quit)
+	for i := rand.Intn(10); i >= 0; i-- {
+		fmt.Println(<-c2)
+	}
+	quit <- "Bye!"
+	fmt.Printf("Joe says:%q\n", <-quit)
+
+	const n = 10000
+	leftmost := make(chan int)
+	right := leftmost
+	left := leftmost
+	for i := 0; i < n; i++ {
+		right = make(chan int)
+		go f(left, right)
+		left = right
+	}
+	go func(c chan int) {
+		c <- 1
+	}(right)
+	fmt.Println(<-leftmost)
+
+	c1 := boring1("Joe")
+	timeout := time.After(5 * time.Second)
+	for {
+		select {
+		case s := <-c1:
+			fmt.Println(s)
+		case <-timeout:
+			fmt.Println("You talk too much.")
+			return
+		case <-quit:
+			return
+		}
+	}
+
 	ts = append(ts, time.Now())
 	fmt.Printf("total time took %7.3fs\n", ts[1].Sub(ts[0]).Seconds())
 
-	for i := 0; i < 5; i++ {
+}
 
-	}
+func f(left, right chan int) {
+	left <- 1 + <-right
+}
 
+func boring2(msg string, quit chan string) <-chan string {
+	c := make(chan string)
+	go func() {
+		for i := 0; ; i++ {
+			select {
+			case c <- fmt.Sprintf("%s: %d", msg, i):
+				// do nothing
+			case <-quit:
+				quit <- "See you!"
+				return
+			}
+		}
+
+	}()
+	return c
+}
+
+func boring1(msg string) <-chan string {
+	c := make(chan string)
+	go func() { // launch goroutine from inside the function
+		sum := 0
+		for i := 0; ; i++ {
+			t := rand.Intn(1e3)
+			sum += t
+			c <- fmt.Sprintf("%s: %d %d", msg, i, t)
+			time.Sleep(time.Duration(t) * time.Millisecond)
+		}
+	}()
+	return c // Return the channel to the caller
 }
 
 func boring(msg string) <-chan Message { // Returns receive-only channel of strings.
