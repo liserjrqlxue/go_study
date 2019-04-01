@@ -154,7 +154,7 @@ func get2(in0 *dch, in1 *dch) []rat {
 	return getn([]*dch{in0, in1})
 }
 
-func copy(in *dch, out *dch) {
+func copy2(in *dch, out *dch) {
 	for {
 		<-out.req
 		out.dat <- get(in)
@@ -167,8 +167,8 @@ func repeat(dat rat, out *dch) {
 	}
 }
 
-type PS *dch    // power series
-type PS2 *[2]PS // pair of power series
+type PS *dch // power series
+//type PS2 *[2]PS // pair of power series
 
 var Ones PS
 var Twos PS
@@ -334,10 +334,10 @@ func Add(U, V PS) PS {
 				Z.dat <- add(uv[0], uv[1])
 			case 1:
 				Z.dat <- uv[1]
-				copy(V, Z)
+				copy2(V, Z)
 			case 2:
 				Z.dat <- uv[0]
-				copy(U, Z)
+				copy2(U, Z)
 			case 3:
 				Z.dat <- finis
 			}
@@ -379,7 +379,7 @@ func Monmul(U PS, n int) PS {
 		for ; n > 0; n-- {
 			put(zero, Z)
 		}
-		copy(U, Z)
+		copy2(U, Z)
 	}()
 	return Z
 }
@@ -414,7 +414,7 @@ func Shift(c rat, U PS) PS {
 	Z := mkPS()
 	go func() {
 		put(c, Z)
-		copy(U, Z)
+		copy2(U, Z)
 	}()
 	return Z
 }
@@ -462,7 +462,7 @@ func Mul(U, V PS) PS {
 			W := Add(Cmul(uv[0], VV[0]), Cmul(uv[1], UU[0]))
 			<-Z.req
 			Z.dat <- get(W)
-			copy(Add(W, Mul(UU[1], VV[1])), Z)
+			copy2(Add(W, Mul(UU[1], VV[1])), Z)
 		}
 	}()
 	return Z
@@ -545,7 +545,7 @@ func Recip(U PS) PS {
 		z := inv(get(U))
 		Z.dat <- z
 		split(Mul(Cmul(neg(z), U), Shift(z, ZZ[0])), ZZ)
-		copy(ZZ[1], Z)
+		copy2(ZZ[1], Z)
 	}()
 	return Z
 }
@@ -580,7 +580,7 @@ func Subst(U, V PS) PS {
 			if end(get(VV[0])) != 0 {
 				put(finis, Z)
 			} else {
-				copy(Mul(VV[0], Subst(U, VV[1])), Z)
+				copy2(Mul(VV[0], Subst(U, VV[1])), Z)
 			}
 		}
 	}()
