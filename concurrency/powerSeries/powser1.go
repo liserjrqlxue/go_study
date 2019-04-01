@@ -295,7 +295,7 @@ func printn(U PS, n int) {
 			u.pr()
 		}
 	}
-	print(("\n"))
+	print("\n")
 }
 
 // Evaluate n terms of power series U at x=c
